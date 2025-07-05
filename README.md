@@ -1,1 +1,1 @@
-"# mern-auth" 
+# mern-auth
