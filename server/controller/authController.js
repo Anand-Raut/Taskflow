@@ -99,8 +99,11 @@ export const logout = async (req, res) => {
 export const sendVerifyOtp = async (req, res) => {
     try{
         const {userId} = req.body
-        const user = await userModel.findbyId(userId)
-
+        console.log(req.body)
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return res.json({ success: false, message: 'User not found' })
+        }   
         if (user.isAccountVerified){
             return res.json({success: false, message: 'account already verified'})
         }
@@ -114,7 +117,7 @@ export const sendVerifyOtp = async (req, res) => {
 
         const mailoptions = {
             from: process.env.SENDER_EMAIL,
-            to: email,
+            to: user.email,
             subject: 'Account verification',
             text: `OTP: ${otp}` 
         }
@@ -125,12 +128,13 @@ export const sendVerifyOtp = async (req, res) => {
         })
 
     }catch(error){
-        res.json({success: false, message:`Encountered error: ${error.message}`})
+        res.json({success: false, message:`Encountered error in sendVerifyOtp: ${error.message}`})
     }
 }
 
 export const verifyEmail = async (req, res) => {
     const {userId, otp} = req.body;
+    const user = await userModel.findById(userId)
     if (!user || !otp) {
         res.json({
             success: false,
@@ -138,7 +142,7 @@ export const verifyEmail = async (req, res) => {
         })
     }
     try{
-        const user = await userModel.findbyId(userId)
+        // const user = await userModel.findById(userId)
 
         if (!user){
             return res.json({
@@ -153,7 +157,7 @@ export const verifyEmail = async (req, res) => {
             })
         }
 
-        if (user.verifyOtp !== opt){
+        if (user.verifyOtp !== otp){
             return res.json({
                 sucess: false,
                 message: 'Invalid OTP'
@@ -176,8 +180,6 @@ export const verifyEmail = async (req, res) => {
             message: 'Email verified successfully'
         })
 
-
-
     }catch(error){
         res.json({
             success: false,
@@ -188,10 +190,7 @@ export const verifyEmail = async (req, res) => {
 
 export const isAuthenticated = async (req, res) => {
     try {
-
-
-
-
+        
         res.json({success: true})
     } catch (error) {
         res.json({success: false, message: error.message})

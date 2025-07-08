@@ -2,8 +2,9 @@ import jwt from 'jsonwebtoken'
 
 const userAuth = async (req, res, next) => {
     const {token} = req.cookies;
-
+    // console.log(token)
     if (!token){
+        console.log("COOKIE me token NAHI MILIII")
         return res.json({
             success: false,
             message: 'Unauthorized, Login again'
@@ -14,7 +15,8 @@ const userAuth = async (req, res, next) => {
         const tokenDecode = jwt.verify(token, process.env.JWT_SECRET)
         
         if (tokenDecode.id){
-            req.userId = tokenDecode.id
+            req.body.userId = tokenDecode.id
+            // console.log(tokenDecode.id)
         }else{
             res.json({
                 success: false,
@@ -22,6 +24,7 @@ const userAuth = async (req, res, next) => {
             })
         }
         next();
+        // console.log("End")
 
     } catch (error) { 
         return res.json({
