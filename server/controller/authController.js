@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken'
 import userModel from '../models/userModel.js'
 import transporter from '../config/nodemailer.js'
 
-
 export const register = async (req, res) => {
 
     const {name, email, password} = req.body;
@@ -68,10 +67,10 @@ export const login = async (req, res) => {
         const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '7d'})
 
         res.cookie('token', token, {
-            httpOnly: true,
             secure: process.env.NODE_ENV === 'production', 
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            // httpOnly: true,
         })
 
         return res.json({success: true})
@@ -98,8 +97,7 @@ export const logout = async (req, res) => {
 
 export const sendVerifyOtp = async (req, res) => {
     try{
-        const {userId} = req.body
-        console.log(req.body)
+        const userId = req.userId
         const user = await userModel.findById(userId)
         if (!user) {
             return res.json({ success: false, message: 'User not found' })
@@ -133,7 +131,8 @@ export const sendVerifyOtp = async (req, res) => {
 }
 
 export const verifyEmail = async (req, res) => {
-    const {userId, otp} = req.body;
+    const {otp} = req.body
+    const userId = req.userId
     const user = await userModel.findById(userId)
     if (!user || !otp) {
         res.json({
@@ -188,11 +187,10 @@ export const verifyEmail = async (req, res) => {
     }
 }
 
-export const isAuthenticated = async (req, res) => {
-    try {
-        
-        res.json({success: true})
-    } catch (error) {
-        res.json({success: false, message: error.message})
-    }
-}
+// export const isAuthenticated = async (req, res) => {
+//     try {
+//         res.json({success: true})
+//     } catch (error) {
+//         res.json({success: false, message: error.message})
+//     }
+// }

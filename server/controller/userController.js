@@ -2,7 +2,7 @@ import userModel from "../models/userModel.js";
 
 export const getUserData = async (req, res) =>{
     try {
-        const {userId} = req.body;
+        const userId = req.userId; // userId is set by the userAuth middleware
 
         const user = await userModel.findById(userId)
 
