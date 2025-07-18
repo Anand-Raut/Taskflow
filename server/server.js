@@ -5,7 +5,8 @@ import cookieParser from "cookie-parser"
 import connectDB from "./config/mongodb.js"
 import userRouter from "./routes/userRoutes.js"
 import authRouter from "./routes/authRoutes.js"
-
+import taskRouter from "./routes/taskRoutes.js"
+import boardRouter from "./routes/boardRoutes.js"
 const app = express()
 const port = process.env.PORT || 4000
 
@@ -24,3 +25,5 @@ app.get('/', (req, res) => res.send("API working"))
 
 app.use('/api/auth', authRouter)
 app.use('/api/user', userRouter)
+app.use('/api/task', taskRouter)
+app.use('/api/board', boardRouter)

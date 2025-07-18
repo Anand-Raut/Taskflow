@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const boardSchema = new mongoose.Schema({
-    name: { type: String, required: true },
+    boardName: { type: String, required: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'user' }],
     createdAt: { type: Date, default: Date.now }

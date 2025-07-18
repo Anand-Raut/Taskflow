@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 const Button = ({ children, className = "", ...props }) => (
   <button
     className={`px-6 py-2 rounded-md font-semibold transition hover:shadow active:scale-95 ${className}`}
@@ -7,6 +8,7 @@ const Button = ({ children, className = "", ...props }) => (
   </button>
 );
 
+
 const Feature = ({ icon, title, description }) => (
   <div className="flex flex-col items-start p-6 bg-white rounded-xl shadow-md border hover:shadow-lg transition text-left">
     <div className="mb-3">{icon}</div>
@@ -15,8 +17,19 @@ const Feature = ({ icon, title, description }) => (
   </div>
 );
 
+
 export default function LandingPage() {
-  const isLoggedIn = document.cookie.includes("token");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(document.cookie.includes("token"));
+  }, []);
+
+  const logout = () => {
+    document.cookie = "token =; expires=Thu, 01 Jan 1970 00:00:00 UTC; path =/"
+    setIsLoggedIn(false)
+  }
+
 
   return (
     <div className="relative min-h-screen font-sans bg-gray-50 text-gray-900 overflow-hidden">
@@ -33,6 +46,14 @@ export default function LandingPage() {
               onClick={() => window.location.href = "/login"}
             >
               Login / Register
+            </Button>
+          )}
+          {isLoggedIn && (
+            <Button
+              className="bg-indigo-600 text-white hover:bg-indigo-700"
+              onClick={() => logout()}
+            >
+              Log Out
             </Button>
           )}
         </header>

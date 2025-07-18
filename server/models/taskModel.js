@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const taskSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, default: '' },
-    board: { type: mongoose.Schema.Types.ObjectId, ref: 'board', required: true },
+    boardId: { type: mongoose.Schema.Types.ObjectId, ref: 'board', required: true },
     dueDate: { type: Date },
     createdAt: { type: Date, default: Date.now }
 });
