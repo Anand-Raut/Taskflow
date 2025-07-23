@@ -34,7 +34,7 @@ export const createBoard = async (req, res) => {
 export const getBoards = async (req, res) => {
     try {
         const userId = req.userId
-        const boards = await boardModel.find({members: userId}).populate([{ path: 'createdBy', select: 'name email' }, { path: 'members', select: 'name email' }])
+        const boards = await boardModel.find({members: userId}).populate([{ path: 'createdBy', select: 'name email' }, { path: 'members', select: 'name email' }]).sort()
         return res.json({
             success: true,
             boards: boards
