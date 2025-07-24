@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const DashBoard = () => {
   const API_BASE = "http://localhost:4000/api/";
@@ -6,115 +9,192 @@ const DashBoard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [boards, setBoards] = useState([]);
+  const [newBoardName, setNewBoardName] = useState("");
+  const [taskInputs, setTaskInputs] = useState({
+    title: "",
+    description: "",
+    boardId: "",
+    dueDate: "",
+  });
 
-
-  const addBoard = async ()=> {
-    const boardName = document.querySelector('#boardName').value
-    document.querySelector('#boardName').value = ""
-    const res = await fetch(API_BASE+"board/create", {
+  const addBoard = async () => {
+    if (!newBoardName.trim()) return;
+    const res = await fetch(API_BASE + "board/create", {
       method: "POST",
-      credentials:"include",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        boardName
-      })
-    })
-  }
+      body: JSON.stringify({ boardName: newBoardName }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setBoards((prev) => [...prev, data.board]);
+      setNewBoardName("");
+    } else {
+      console.error(data.message);
+    }
+  };
+
+  const addTask = async (boardId) => {
+    const { title, description, dueDate } = taskInputs;
+    if (!title.trim()) return alert("Title is required");
+
+    const res = await fetch(API_BASE + "task/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ title, description, boardId, dueDate }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      setTasks((prev) => [...prev, data.task]);
+      setTaskInputs({ title: "", description: "", boardId: "", dueDate: "" });
+    } else {
+      console.error(data.message);
+    }
+  };
+
   useEffect(() => {
-    const loadTasks = async () => {
+    const loadData = async () => {
       try {
-        let res = await fetch(API_BASE + "task/get", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", 
-        });
+        const [taskRes, boardRes] = await Promise.all([
+          fetch(API_BASE + "task/get", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }),
+          fetch(API_BASE + "board/get", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }),
+        ]);
 
-        let data = await res.json();
-        if (data.success) {
-          setTasks(data.tasks);
-        } else {
-          setError(data.message || "Failed to fetch tasks");
-        }
+        const taskData = await taskRes.json();
+        const boardData = await boardRes.json();
 
-        res = await fetch(API_BASE + "board/get", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
-        data = await res.json();
-        if (data.success) {
-          setBoards(data.boards);
-        } else {
-          setError(data.message || "Failed to fetch Boards");
-        }
-      } catch (error) {
-        setError(error.message);
+        if (taskData.success) setTasks(taskData.tasks);
+        else setError(taskData.message || "Failed to fetch tasks");
+
+        if (boardData.success) setBoards(boardData.boards);
+        else setError(boardData.message || "Failed to fetch boards");
+      } catch (err) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    loadTasks();
+    loadData();
   }, []);
 
   return (
-    <div className="p-8 mx-auto font-sans">
-      <h1 className="text-3xl font-bold mb-6 text-indigo-700">Dashboard</h1>
+    <div className="p-10 w-full mx-auto space-y-16 bg-gradient-to-br from-zinc-950 to-zinc-900 min-h-screen text-white font-sans">
+      <h1 className="text-6xl font-extrabold tracking-tight text-center uppercase text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-600">
+        DashBoard
+      </h1>
 
-      {loading && <p className="text-gray-600">Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+      {loading && <p className="text-zinc-400 text-center">Loading...</p>}
+      {error && <p className="text-red-500 text-center">{error}</p>}
 
-      {boards.length > 0 ? (
-        <ul className="flex gap-6 flex-wrap">
-          {boards.map((board) => (
-            <li
+      <div className="grid gap-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {boards.map((board) => {
+          const boardTasks = tasks.filter((task) => task.boardId === board._id);
+          return (
+            <Card
               key={board._id}
-              className="border border-gray-500 w-1/4 rounded-lg p-4 shadow hover:shadow-md transition"
+              className="rounded-3xl shadow-2xl bg-gradient-to-b from-zinc-900 to-zinc-800 border border-zinc-700/70 backdrop-blur-sm"
             >
-              <h3 className="text-xl font-semibold text-center text-gray-800 mb-3">
-                {board.boardName}
-              </h3>
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-emerald-400">
+                  {board.boardName}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {boardTasks.length > 0 ? (
+                  boardTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      className="p-4 bg-zinc-800/70 border border-zinc-700 rounded-xl hover:shadow-lg transition-shadow backdrop-blur"
+                    >
+                      <h4 className="font-semibold text-white">
+                        {task.title}
+                      </h4>
+                      <p className="text-sm text-zinc-400">
+                        {task.description}
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        {new Date(task.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm italic text-zinc-500">No tasks yet</p>
+                )}
 
-              {tasks.filter((task) => task.boardId === board._id).length > 0 ? (
-                <ul className="space-y-2">
-                  {tasks
-                    .filter((task) => task.boardId === board._id)
-                    .map((task) => (
-                      <li
-                        key={task._id}
-                        className="border border-gray-200 rounded p-2 shadow-sm"
-                      >
-                        <h4 className="font-semibold">{task.title}</h4>
-                        <p className="text-gray-600 text-sm">{task.description}</p>
-                        <small className="text-gray-500">
-                          Created At:{" "}
-                          {new Date(task.createdAt).toLocaleString("en-US", {
-                            month: "short",
-                            day: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })}
-                        </small>
-                      </li>
-                    ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500 text-sm text-center">No tasks for this board.</p>
-              )}
-            </li>
-          ))}
-            <li className="border border-gray-500  rounded-lg p-4 shadow hover:shadow-md transition">
-                <input id="boardName" type="text" placeholder="Board name" className="border border-gray-200  rounded-lg p-2 shadow hover:shadow-md transition"/>
-                <button onClick={addBoard} className="border border-gray-200  rounded-lg p-4 shadow hover:shadow-md transition">
-                Add Board
-              </button>
-            </li>
-        </ul>
-      ) : (
-        !loading && <p className="text-gray-600">No boards found.</p>
-      )}
+                <div className="space-y-4 pt-6 border-t border-zinc-700">
+                  <Input
+                    placeholder="Task title"
+                    className="bg-zinc-900 text-white placeholder-zinc-500 border-zinc-700 rounded-lg"
+                    value={taskInputs.boardId === board._id ? taskInputs.title : ""}
+                    onChange={(e) =>
+                      setTaskInputs({
+                        ...taskInputs,
+                        title: e.target.value,
+                        boardId: board._id,
+                      })
+                    }
+                  />
+                  <Input
+                    placeholder="Description"
+                    className="bg-zinc-900 text-white placeholder-zinc-500 border-zinc-700 rounded-lg"
+                    value={taskInputs.boardId === board._id ? taskInputs.description : ""}
+                    onChange={(e) =>
+                      setTaskInputs({
+                        ...taskInputs,
+                        description: e.target.value,
+                        boardId: board._id,
+                      })
+                    }
+                  />
+                  <Input
+                    type="date"
+                    className="bg-zinc-900 text-white placeholder-zinc-500 border-zinc-700 rounded-lg"
+                    value={taskInputs.boardId === board._id ? taskInputs.dueDate : ""}
+                    onChange={(e) =>
+                      setTaskInputs({
+                        ...taskInputs,
+                        dueDate: e.target.value,
+                        boardId: board._id,
+                      })
+                    }
+                  />
+                  <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium tracking-wide rounded-xl" onClick={() => addTask(board._id)}>
+                    Add Task
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+
+        <Card className="border-4 border-dashed bg-zinc-9 00 border-emerald-500/60 hover:bg-emerald-500/10 backdrop-blur rounded-3xl flex flex-col justify-center items-center p-8">
+          <CardHeader className="pb-2 text-center">
+            <CardTitle className="text-emerald-400 text-xl font-semibold">Create New Board</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 w-full">
+            <Input
+              placeholder="Board name"
+              className="bg-zinc-900 text-white placeholder-zinc-500 border-zinc-700 rounded-lg"
+              value={newBoardName}
+              onChange={(e) => setNewBoardName(e.target.value)}
+            />
+            <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl" onClick={addBoard}>
+              Create Board
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

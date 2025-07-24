@@ -6,7 +6,7 @@ import boardModel from "../models/boardModel.js"
 export const createTask = async (req, res) =>{
     const {title, description, boardId, dueDate} = req.body
 
-    if (!title || !description || !boardId){
+    if (!title || !boardId){
         return res.json({
             success: false,
             message: 'Missing Details'
