@@ -53,7 +53,18 @@ const DashBoard = () => {
       console.error(data.message);
     }
   };
-
+  const markTaskAsDone = async (taskId) => {
+    const res = await fetch(API_BASE + "task/markdone", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ taskId }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setTasks((prev) => prev.filter((task) => task._id !== taskId));
+    }
+  };
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -73,7 +84,7 @@ const DashBoard = () => {
         const taskData = await taskRes.json();
         const boardData = await boardRes.json();
 
-        if (taskData.success) setTasks(taskData.tasks);
+        if (taskData.success) setTasks(taskData.tasks );
         else setError(taskData.message || "Failed to fetch tasks");
 
         if (boardData.success) setBoards(boardData.boards);
@@ -99,7 +110,7 @@ const DashBoard = () => {
 
       <div className="grid gap-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {boards.map((board) => {
-          const boardTasks = tasks.filter((task) => task.boardId === board._id);
+          const boardTasks = tasks.filter((task) => task.boardId === board._id && task.status !== "done");
           return (
             <Card
               key={board._id}
@@ -117,9 +128,14 @@ const DashBoard = () => {
                       key={task._id}
                       className="p-4 bg-zinc-800/70 border border-zinc-700 rounded-xl hover:shadow-lg transition-shadow backdrop-blur"
                     >
-                      <h4 className="font-semibold text-white">
-                        {task.title}
-                      </h4>
+                      <div className="flex justify-between">
+                        <h4 className="font-semibold text-white w-3/4">
+                          {task.title}
+                        </h4>
+                        <button onClick={() => markTaskAsDone(task._id)}>
+                          <span className="text-sm text-zinc-400">✅</span>
+                        </button>
+                      </div>
                       <p className="text-sm text-zinc-400">
                         {task.description}
                       </p>
