@@ -1,4 +1,3 @@
-import express from "express"
 import taskModel from "../models/taskModel.js"
 import boardModel from "../models/boardModel.js"
 
@@ -90,4 +89,26 @@ export const getTasks = async(req, res) =>{
         })
     }
 
+}
+
+export const markTaskAsDone = async (req, res) => {
+    const {taskId} = req.body
+    if (!taskId){
+        return res.json({
+            success: false,
+            message: "Task ID not found"
+        })
+    }
+    try {
+        const task = await taskModel.findByIdAndUpdate(taskId, {status: "done", completedAt: Date.now()})
+        if (!task) {
+            return res.json({success: false, message: "Task not found"})
+        }
+        return res.json({success: true, message: "Task marked as done", task})
+    } catch (error) {
+        return res.json({
+            success: false,
+            message: `Error encountered: ${error.message}`
+        })
+    }
 }

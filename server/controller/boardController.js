@@ -72,10 +72,78 @@ export const getBoardbyId = async (req, res) => {
 }
 
 export const deleteBoardById = async (req, res) => {
-    if (!req.userId){
+    const {boardId} = req.body
+    if (!boardId){
         return res.json({
             success: false,
-            message: 'Board name is required'
+            message: 'Board Id is required'
         })
+    }
+    try {
+        const {boardId} = req.body
+        await boardModel.findByIdAndDelete(boardId)
+        return res.json({
+            success: true,
+            message: 'Board deleted successfully'
+        })
+    } catch (error) {
+        return res.json({
+            success: false,
+            message: `Error encountered: ${error.message}`
+        })
+    }
+}
+
+export const addMember = async (req, res) => {
+    const { boardId, email } = req.body;
+
+    if (!boardId || !email) {
+        return res.json({
+            success: false,
+            message: 'Board ID and user email are required'
+        });
+    }
+
+    try {
+        const board = await boardModel.findById(boardId);
+        if (!board) {
+            return res.json({
+                success: false,
+                message: 'Board not found'
+            });
+        }
+
+        // Find user by email
+        const userModel = (await import('../models/userModel.js')).default;
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        const newUserId = user._id;
+
+        // Check if user is already a member
+        if (board.members.includes(newUserId)) {
+            return res.json({
+                success: false,
+                message: 'User is already a member of this board'
+            });
+        }
+
+        board.members.push(newUserId);
+        await board.save();
+
+        return res.json({
+            success: true,
+            message: 'User added to board successfully',
+            board
+        });
+    } catch (error) {
+        return res.json({
+            success: false,
+            message: `Error encountered: ${error.message}`
+        });
     }
 }
