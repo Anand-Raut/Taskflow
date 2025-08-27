@@ -10,6 +10,7 @@ const DashBoard = () => {
   const [error, setError] = useState("");
   const [boards, setBoards] = useState([]);
   const [newBoardName, setNewBoardName] = useState("");
+  const [newMemberEmail, setNewMemberEmail] = useState("");
   const [taskInputs, setTaskInputs] = useState({
     title: "",
     description: "",
@@ -65,6 +66,38 @@ const DashBoard = () => {
       setTasks((prev) => prev.filter((task) => task._id !== taskId));
     }
   };
+
+  const deleteBoard = async (boardId) => {
+    const res = await fetch(API_BASE+"board/delete", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ boardId }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setBoards((prev) => prev.filter((board) => board._id !== boardId));
+    }
+  };
+
+  const addMember = async (boardId, email) => {
+    if (!boardId || !email) return;
+
+    const res = await fetch(API_BASE + "board/addMember", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ boardId, email }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Member added successfully");
+    } else {
+      console.error(data.message);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -117,9 +150,15 @@ const DashBoard = () => {
               className="rounded-3xl shadow-2xl bg-gradient-to-b from-zinc-900 to-zinc-800 border border-zinc-700/70 backdrop-blur-sm"
             >
               <CardHeader>
-                <CardTitle className="text-xl font-semibold text-emerald-400">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-xl font-semibold text-emerald-400">
                   {board.boardName}
-                </CardTitle>
+                  </CardTitle>
+                  <button onClick={() => deleteBoard(board._id)}>
+                    <span className="text-sm text-zinc-400">🗑️</span>
+                  </button>
+                </div>
+                
               </CardHeader>
               <CardContent className="space-y-5">
                 {boardTasks.length > 0 ? (
@@ -188,6 +227,25 @@ const DashBoard = () => {
                   <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium tracking-wide rounded-xl" onClick={() => addTask(board._id)}>
                     Add Task
                   </Button>
+                </div>
+                <div className="pt-4">
+                  <h4 className="text-sm font-medium text-zinc-400">Members</h4>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {board.members.map((member) => (
+                      <span key={member._id} className="bg-zinc-800 text-zinc-400 text-xs font-medium py-1 px-2 rounded">
+                        {member.name}
+                      </span>
+                    ))}
+                    <Input
+                      placeholder="Add member by email"
+                      className="bg-zinc-900 text-white placeholder-zinc-500 border-zinc-700 rounded-lg"
+                      value={newMemberEmail}
+                      onChange={(e) => setNewMemberEmail(e.target.value)}
+                    />
+                    <Button className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg" onClick={() => addMember(board._id, newMemberEmail)}>
+                      Add Member
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
